@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Home page</title>
+    <link href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" rel="stylesheet">
+    <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="/css/styles.css">
+  </head>
+  <body>
+    <div class="game">
+      <div class="top">
+        <div class="blackcard">
+          <div class="mdc-card black">
+            <p class="content"></p>
+          </div>
+        </div>
+        <div class="answers">
+
+        </div>
+      </div>
+
+      <div class="bottom">
+        <div class="mdc-card mdc-card__primary-action template white">
+          <p class="content"></p>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="connect">
+        <div class="mdc-text-field text-field mdc-text-field--outlined text" data-mdc-auto-init="MDCTextField">
+          <input type="text" id="text-field-outlined" class="mdc-text-field__input" aria-describedby="text-field-outlined-helper-text">
+          <div class="mdc-notched-outline mdc-notched-outline--upgraded">
+              <div class="mdc-notched-outline__leading"></div>
+              <div class="mdc-notched-outline__notch">
+                  <label class="mdc-floating-label" for="text-field-outlined">Username</label>
+              </div>
+              <div class="mdc-notched-outline__trailing"></div>
+          </div>
+        </div>
+        <button class="mdc-button mdc-button--outlined mdc-button--raised">
+            <div class="mdc-button__ripple"></div>
+            <span class="mdc-button__label">Connect</span>
+        </button>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+
+    <!-- <script>
+      window.mdc.autoInit();
+    </script> -->
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      window.mdc.autoInit();
+      const floating = document.querySelector('.mdc-floating-label').MDCTextField;
+    </script>
+
+    <script type="text/javascript">
+      var socket = io();
+      let selector = false;
+      let picks;
+      const btn = document.querySelector('button');
+      btn.addEventListener('click', setGame);
+      function setGame(e){
+        console.log("adding user")
+        var type = $(".mdc-text-field__input").val();
+        socket.emit('add user', type);
+        
+        socket.on('players', function (data) {
+          console.log(data + " is the selector");
+          console.log('you are a player');
+          getData();
+        });
+
+        socket.on('selector', function () {
+          selector = true;
+          console.log('you are the selector for the round');
+        });
+      }
+      function getData(){
+        $.ajax({
+          url : '/users',
+          method : 'GET',
+          success : function(data){
+            fillCards(data.white);
+            setBlackCard(data.black);
+            $(".game").css("display", "block");
+            $(".connect").hide()
+            console.log(data);
+          },
+          error: function(err){
+            console.log('Failed');
+          }
+        });
+      } 
+
+      var setBlackCard = (data) => {
+        $(".mdc-card.black").find("p.content").text(data[0]);
+        picks = data[1];
+      }
+
+      var fillCards = (data) => {
+        $(".mdc-card.white").not(".template").remove();
+        for(var i = 0; i < data.length; i++){
+          console.log(data[i])
+            let clone = $(".mdc-card.white.template").clone();
+            clone.find("p.content").text(data[i])
+            //sets image tage to restuarants image
+            clone.removeClass("template");
+            $(".bottom").append(clone);
+        }
+      }
+
+      $(document).ready(function(){
+        $("body").on("click", ".mdc-card.white", function(){
+          console.log("clicked");
+          socket.emit('answer', $(this).find(".content").text());
+          // let clone = $(this).clone();
+          // clone.removeClass("white").addClass("answer");
+          // $(".answers").append(clone);
+          $(this).remove();
+        })
+
+      });
+    </script>
+  </body>
+</html>

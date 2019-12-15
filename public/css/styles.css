@@ -1,0 +1,70 @@
+body{
+    margin:0;
+    padding: 0;
+}
+.content{
+    margin-left: 10px;
+}
+.blackcard{
+    width: 20%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.answers{
+    width: 80%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.black{
+    background-color: black;
+    color: white;
+    box-shadow: 10px 5px 5px lightgray;
+    height: 200px;
+    width: 200px;
+}
+
+.template{
+    display:none;
+}
+
+.white, .answer{
+    background-color: lightgray;
+    box-shadow: 2px 2px 1px black;
+    height: 200px;
+    width: 200px;
+    margin: 10px;
+}
+
+.top{
+    height: 50vh;
+    margin-top: 30px;
+    display: flex;
+    justify-content: center;
+    flex-direction: row;
+    align-items: center;
+
+}
+.bottom{
+    height: 40vh;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.game{
+    display: none;
+}
+.text {
+    margin:20px;
+}
+.connect {
+    height: 100vh;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
