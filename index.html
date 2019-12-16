@@ -9,6 +9,10 @@
   </head>
   <body>
     <div class="game">
+      <div id="lobby_info">
+        <p class='selector'></p>
+        <p class='players template'></p>
+      </div>
       <div class="top">
         <div class="blackcard">
           <div class="mdc-card black">
@@ -16,15 +20,9 @@
           </div>
         </div>
         <div class="answers">
-
         </div>
       </div>
-
       <div class="bottom">
-        <div class="mdc-card mdc-card__primary-action template white">
-          <p class="content"></p>
-        </div>
-
       </div>
     </div>
 
@@ -45,12 +43,6 @@
         </button>
     </div>
 
-    <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
-
-    <!-- <script>
-      window.mdc.autoInit();
-    </script> -->
-
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
     <script src="/socket.io/socket.io.js"></script>
@@ -60,27 +52,60 @@
     </script>
 
     <script type="text/javascript">
+      let sent = false;
       var socket = io();
       let selector = false;
+      let cardsPicked = [];
       let picks;
+
       const btn = document.querySelector('button');
+
       btn.addEventListener('click', setGame);
+
       function setGame(e){
-        console.log("adding user")
         var type = $(".mdc-text-field__input").val();
         socket.emit('add user', type);
         
         socket.on('players', function (data) {
-          console.log(data + " is the selector");
-          console.log('you are a player');
+          $(".selector").text("Selector: "+data.selector);
           getData();
+          displayUsers(data.players);
         });
 
-        socket.on('selector', function () {
+        socket.on('selector', function (data) {
+          $(".selector").text("Selector: YOU");
           selector = true;
-          console.log('you are the selector for the round');
+          getData();
+          displayUsers(data);
         });
       }
+
+      // creates the cards of the answers selected by users
+      socket.on("selected answers", function(data){
+        var newGroup = document.createElement("div"); 
+        var att = document.createAttribute("class");   
+        att.value = "group";                           
+        newGroup.setAttributeNode(att);  
+        for(var i = 0; i < data.cards.length; i++){
+          var newCard = `<div class="mdc-card mdc-card__primary-action ans">
+                        <p class="content">${data.cards[i]}</p>
+                        <p class='player'>${data.user}</p>
+                      </div>`
+          newGroup.innerHTML += newCard;
+        }
+        $(".answers").append(newGroup);
+      });
+
+      // displays the users in the lobby
+      function displayUsers(users){
+        for(var i= 0; i < users.length; i++){
+          var para = document.createElement("P");
+          para.innerHTML = users[i];
+          document.getElementById("lobby_info").appendChild(para);  
+        }
+      }
+
+      // gets card information from the server
       function getData(){
         $.ajax({
           url : '/users',
@@ -90,7 +115,6 @@
             setBlackCard(data.black);
             $(".game").css("display", "block");
             $(".connect").hide()
-            console.log(data);
           },
           error: function(err){
             console.log('Failed');
@@ -98,33 +122,41 @@
         });
       } 
 
+      // sets up the card for the black card
       var setBlackCard = (data) => {
         $(".mdc-card.black").find("p.content").text(data[0]);
         picks = data[1];
       }
 
+      // fills the cards given to users
       var fillCards = (data) => {
-        $(".mdc-card.white").not(".template").remove();
         for(var i = 0; i < data.length; i++){
-          console.log(data[i])
-            let clone = $(".mdc-card.white.template").clone();
-            clone.find("p.content").text(data[i])
-            //sets image tage to restuarants image
-            clone.removeClass("template");
-            $(".bottom").append(clone);
+          var newCard = `<div class="mdc-card mdc-card__primary-action white">
+                          <p class="content">${data[i]}</p>
+                        </div>`
+          $(".bottom").append(newCard);
         }
       }
 
+      // sets event handlers on the cards
       $(document).ready(function(){
         $("body").on("click", ".mdc-card.white", function(){
-          console.log("clicked");
-          socket.emit('answer', $(this).find(".content").text());
-          // let clone = $(this).clone();
-          // clone.removeClass("white").addClass("answer");
-          // $(".answers").append(clone);
-          $(this).remove();
-        })
+          if(picks > 0 && selector == false){
+            cardsPicked.push($(this).find(".content").text())
+            $(this).remove();
+            picks--;
+          }
+          if(picks == 0 && selector == false && sent == false){
+            socket.emit('answer', cardsPicked);
+            sent = true;
+          }
+        });
 
+        $("body").on("click", ".group", function(){
+          if(selector == true){
+            socket.emit("round winner", $(this).find("p.player").text())
+          }
+        });
       });
     </script>
   </body>
