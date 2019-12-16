@@ -18,7 +18,12 @@ var getJson = () => {
 getJson();
 
 var newCard = () => {
-    blackcard = blackcards[Math.floor(Math.random() * blackcards.length)]
+    for(var i = 0; i < blackcards.length; i++){
+        if(blackcards[i][1] == 2){
+            blackcard = blackcards[i]
+        }
+    }
+    // blackcard = blackcards[Math.floor(Math.random() * blackcards.length)]
 }
 
 // creates an http server that displays hello world
@@ -66,8 +71,17 @@ io.on('connection', function (socket) {
     // allows users to connect once
     var addedUser = false;
 
+    socket.on('round winner', function(winner){
+        console.log(winner);
+    });
+
     // listen fo player answers
     socket.on('answer', function(card){
+        io.emit("selected answers", {
+                                'cards' : card,
+                                'user' : socket.username
+                            }
+        );
         console.log(card)
     });
 
@@ -102,10 +116,16 @@ io.on('connection', function (socket) {
             // gets the initial black card
             newCard();
 
+            var usernames = [];
+            // gets names of users
+            for(var i = 0; i < lobbies[0]['users'].length; i++){
+                usernames.push(lobbies[0]['users'][i].username)
+            }
+
             // randomly selects a user to be the selector
             var selector = lobbies[0]['users'][Math.floor(Math.random() * lobbies[0]['users'].length)];
             console.log(selector.username);
-            selector.emit("selector");
+            selector.emit("selector", usernames);
 
             // notifies the other clients that they are players
             for(var i = 0; i < lobbies[0]['users'].length; i++){
@@ -113,7 +133,11 @@ io.on('connection', function (socket) {
                     continue;
                 }
                 else{
-                    lobbies[0]['users'][i].emit("players", selector.username);
+                    lobbies[0]['users'][i].emit("players", {
+                            'selector' : selector.username,
+                            'players' : usernames
+                        }
+                    );
                 }
             }
         }
