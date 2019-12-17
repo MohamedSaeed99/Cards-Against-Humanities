@@ -9,10 +9,6 @@
   </head>
   <body>
     <div class="game">
-      <div id="lobby_info">
-        <p class='selector'></p>
-        <p class='players template'></p>
-      </div>
       <div class="top">
         <div class="blackcard">
           <div class="mdc-card black">
@@ -23,6 +19,12 @@
         </div>
       </div>
       <div class="bottom">
+        <div id="lobby_info">
+          <p class='selector'></p>
+        </div>
+        <div class='cards'>
+
+        </div>
       </div>
     </div>
 
@@ -46,6 +48,7 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
     <script src="/socket.io/socket.io.js"></script>
+    
     <script>
       window.mdc.autoInit();
       const floating = document.querySelector('.mdc-floating-label').MDCTextField;
@@ -100,6 +103,10 @@
       function displayUsers(users){
         for(var i= 0; i < users.length; i++){
           var para = document.createElement("P");
+          var att = document.createAttribute("class");   
+          att.value = "user_display"; 
+          para.setAttributeNode(att);
+
           para.innerHTML = users[i];
           document.getElementById("lobby_info").appendChild(para);  
         }
@@ -134,7 +141,7 @@
           var newCard = `<div class="mdc-card mdc-card__primary-action white">
                           <p class="content">${data[i]}</p>
                         </div>`
-          $(".bottom").append(newCard);
+          $(".cards").append(newCard);
         }
       }
 
