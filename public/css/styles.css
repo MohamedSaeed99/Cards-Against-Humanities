@@ -123,11 +123,16 @@ body{
     flex-direction: column;
 }
 
-.user_display, .selector{
+.user_info {
+    display: flex;
+    flex-direction: row;
+}
+
+.name, .score, .selector{
     padding:0;
     margin:5px;
 }
-.user_display{
+.name, .score{
     font-size: 14px;
 }
 .selector{

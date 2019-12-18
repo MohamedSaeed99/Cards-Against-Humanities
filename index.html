@@ -80,10 +80,9 @@
 
       socket.on('players', function (data) {
         $(".selector").text("Selector: " + data.selector);
-        console.log(data);
         selector = false;
         getData();
-        displayUsers(data.players);
+        displayUsers(data.players, data.scores);
       });
 
       socket.on('selector', function (data) {
@@ -91,13 +90,28 @@
         console.log(data);
         selector = true;
         getData();
-        displayUsers(data);
+        displayUsers(data.players, data.scores);
       });
 
-      socket.on("round over", function(){
-        $(".group").remove();
-        cardsPicked = [];
-        sent = false;
+      socket.on("round over", function(data){ 
+        $(".ans").each(function(){
+          if($(this).find("p.player").text() == data.winner){
+            $(this).removeClass("unselected").addClass("selected");
+          }
+        });
+
+        $(".user_info").each(function(){
+          if($(this).find(".name").text() == data.winner+":"){
+            $(this).find(".score").text("Winner");
+          }
+        })
+
+        setTimeout(function(){ 
+          $(".group").remove();
+          cardsPicked = [];
+          sent = false;
+        }, 2000);
+
         console.log("game over")
       });
 
@@ -118,16 +132,15 @@
       });
 
       // displays the users in the lobby
-      function displayUsers(users){
-        $(".user_display").remove()
+      function displayUsers(users, scores){
+        $(".user_info").remove()
         for(var i= 0; i < users.length; i++){
-          var para = document.createElement("P");
-          var att = document.createAttribute("class");   
-          att.value = "user_display"; 
-          para.setAttributeNode(att);
+          var playerInfo = `<div class="user_info">
+                              <p class="name">${users[i]}:</p>
+                              <p class="score">${scores[i]}</p>
+                            </div>`
 
-          para.innerHTML = users[i];
-          document.getElementById("lobby_info").appendChild(para);  
+          $("#lobby_info").append(playerInfo);  
         }
       }
 
