@@ -67,6 +67,7 @@
       let selector = false;
       let cardsPicked = [];
       let picks;
+      let winner;
 
       const btn = document.querySelector('button.connect_btn');
 
@@ -75,19 +76,30 @@
       function setGame(e){
         var type = $(".mdc-text-field__input").val();
         socket.emit('add user', type);
-        socket.on('players', function (data) {
-          $(".selector").text("Selector: " + data.selector);
-          getData();
-          displayUsers(data.players);
-        });
-
-        socket.on('selector', function (data) {
-          $(".selector").text("Selector: YOU");
-          selector = true;
-          getData();
-          displayUsers(data);
-        });
       }
+
+      socket.on('players', function (data) {
+        $(".selector").text("Selector: " + data.selector);
+        console.log(data);
+        selector = false;
+        getData();
+        displayUsers(data.players);
+      });
+
+      socket.on('selector', function (data) {
+        $(".selector").text("Selector: YOU");
+        console.log(data);
+        selector = true;
+        getData();
+        displayUsers(data);
+      });
+
+      socket.on("round over", function(){
+        $(".group").remove();
+        cardsPicked = [];
+        sent = false;
+        console.log("game over")
+      });
 
       // creates the cards of the answers selected by users
       socket.on("selected answers", function(data){
@@ -96,7 +108,7 @@
         att.value = "group";                           
         newGroup.setAttributeNode(att);  
         for(var i = 0; i < data.cards.length; i++){
-          var newCard = `<div class="mdc-card mdc-card__primary-action ans">
+          var newCard = `<div class="mdc-card mdc-card__primary-action ans unselected">
                         <p class="content">${data.cards[i]}</p>
                         <p class='player'>${data.user}</p>
                       </div>`
@@ -107,6 +119,7 @@
 
       // displays the users in the lobby
       function displayUsers(users){
+        $(".user_display").remove()
         for(var i= 0; i < users.length; i++){
           var para = document.createElement("P");
           var att = document.createAttribute("class");   
@@ -123,8 +136,9 @@
         if(selector == false){
           $(".choose_btn").attr("disabled")
         }
+        var url = '/users/'+(6-$(".white").length).toString()
         $.ajax({
-          url : '/users',
+          url : url,
           method : 'GET',
           success : function(data){
             fillCards(data.white);
@@ -158,11 +172,14 @@
       $(document).ready(function(){
         $("body").on("click", ".mdc-card.white", function(){
           if(picks > 0 && selector == false){
+            console.log('selected ' + picks.toString());
+            console.log($(this).find(".content").text())
             cardsPicked.push($(this).find(".content").text())
             $(this).remove();
             picks--;
           }
           if(picks == 0 && selector == false && sent == false){
+            console.log(cardsPicked)
             socket.emit('answer', cardsPicked);
             sent = true;
           }
@@ -170,11 +187,15 @@
 
         $("body").on("click", ".group", function(){
           if(selector == true){
-            $(this).find(".ans").css('background-color', "#6B8EB7")
-            // socket.emit("round winner", $(this).find("p.player").text())
+            $('.ans.selected').removeClass('selected').addClass('unselected');
+            $(this).find(".ans").removeClass('unselected').addClass('selected');
+
+            winner = $(this).find(".player").first().text();
           }
         });
-        $(".choose_btn").on("")
+        $(".choose_btn").on("click", function(){
+          socket.emit("round winner", winner);
+        });
       });
     </script>
   </body>

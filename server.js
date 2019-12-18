@@ -18,12 +18,7 @@ var getJson = () => {
 getJson();
 
 var newCard = () => {
-    for(var i = 0; i < blackcards.length; i++){
-        if(blackcards[i][1] == 2){
-            blackcard = blackcards[i]
-        }
-    }
-    // blackcard = blackcards[Math.floor(Math.random() * blackcards.length)]
+    blackcard = blackcards[Math.floor(Math.random() * blackcards.length)]
 }
 
 // creates an http server that displays hello world
@@ -48,11 +43,14 @@ app.get('/',(request,response)=>{
     response.sendFile(__dirname + '/index.html');
 });
 
-app.get('/users',(request,response)=>{
+app.get('/users/:count',(request, response)=>{
     var usersCards = [];
-    for(var i =0; i < 6; i++){
+    var totCard = request.params.count;
+    console.log(totCard)
+    for(var i = 0; i < totCard; i++){
         usersCards.push(whitecards[Math.floor(Math.random() * whitecards.length)])
     }
+
     collection = {
         'black' : blackcard,
         'white' : usersCards
@@ -67,13 +65,52 @@ var lobbies=[{
 }]; 
 
 io.on('connection', function (socket) {
-
     // allows users to connect once
     var addedUser = false;
 
+    function newRoundUsers(){
+        var usernames = [];
+        // gets names of users
+        for(var i = 0; i < lobbies[0]['users'].length; i++){
+            usernames.push(lobbies[0]['users'][i].username)
+        }
+
+        // randomly selects a user to be the selector
+        var selector = lobbies[0]['users'][Math.floor(Math.random() * lobbies[0]['users'].length)];
+        console.log(selector.username);
+        selector.emit("selector", usernames);
+
+        // notifies the other clients that they are players
+        for(var i = 0; i < lobbies[0]['users'].length; i++){
+            if(lobbies[0]['users'][i] == selector){
+                continue;
+            }
+            else{
+                lobbies[0]['users'][i].emit("players", {
+                        'selector' : selector.username,
+                        'players' : usernames
+                    }
+                );
+            }
+        }
+    }
+
     socket.on('round winner', function(winner){
-        console.log(winner);
+        io.emit('round over', {
+            'winner' : winner,
+            'questionCard' : newCard()
+        });
+        newRoundUsers();
     });
+
+    // socket.on("need cards", function(count){
+    //     var moreCards = [];
+    //     for(var i = 0; i < count; i++){
+    //         moreCards.push(whitecards[Math.floor(Math.random() * whitecards.length)]);
+    //     }
+    //     socket.emit('cards', moreCards);
+    // })
+
 
     // listen fo player answers
     socket.on('answer', function(card){
@@ -85,9 +122,9 @@ io.on('connection', function (socket) {
         console.log(card)
     });
 
+
     // adds user to the lobby by listening for emissions from client
     socket.on('add user', function (username) {
-
         // checks if user was added
         if (addedUser) {
             console.log(socket.username + " is already in lobby.");
@@ -113,33 +150,11 @@ io.on('connection', function (socket) {
 
         // randomly chooses an initial selector from the players
         if (numUsers == 4){
-            // gets the initial black card
+            // gets random question card
             newCard();
 
-            var usernames = [];
-            // gets names of users
-            for(var i = 0; i < lobbies[0]['users'].length; i++){
-                usernames.push(lobbies[0]['users'][i].username)
-            }
-
-            // randomly selects a user to be the selector
-            var selector = lobbies[0]['users'][Math.floor(Math.random() * lobbies[0]['users'].length)];
-            console.log(selector.username);
-            selector.emit("selector", usernames);
-
-            // notifies the other clients that they are players
-            for(var i = 0; i < lobbies[0]['users'].length; i++){
-                if(lobbies[0]['users'][i] == selector){
-                    continue;
-                }
-                else{
-                    lobbies[0]['users'][i].emit("players", {
-                            'selector' : selector.username,
-                            'players' : usernames
-                        }
-                    );
-                }
-            }
+            // selects the players and selector
+            newRoundUsers();
         }
     });
 });

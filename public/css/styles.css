@@ -44,11 +44,18 @@ body{
 
 .white, .ans{
     display:inline-block;
-    background-color: lightgray;
     box-shadow: 2px 2px 1px black;
     height: 150px;
     width: 150px;
     margin:5px;
+}
+
+.selected {
+    background-color: #6B8EB7;
+}
+
+.unselected {
+    background-color: lightgray;
 }
 
 .top{
