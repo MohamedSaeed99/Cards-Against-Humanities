@@ -9,18 +9,25 @@
   </head>
   <body>
     <div class="game">
+      <div class = 'select'>
+        <p class='selector'></p>
+      </div>
       <div class="top">
         <div class="blackcard">
           <div class="mdc-card black">
             <p class="content"></p>
           </div>
+          <button class="hero-button mdc-button mdc-button--outlined mdc-ripple-upgraded choose_btn">
+            <span class="mdc-button__ripple"></span>
+            Choose
+          </button>
         </div>
         <div class="answers">
         </div>
       </div>
+      <div class='separator'></div>
       <div class="bottom">
         <div id="lobby_info">
-          <p class='selector'></p>
         </div>
         <div class='cards'>
 
@@ -39,7 +46,7 @@
               <div class="mdc-notched-outline__trailing"></div>
           </div>
         </div>
-        <button class="mdc-button mdc-button--outlined mdc-button--raised">
+        <button class="mdc-button mdc-button--outlined mdc-button--raised connect_btn">
             <div class="mdc-button__ripple"></div>
             <span class="mdc-button__label">Connect</span>
         </button>
@@ -61,16 +68,15 @@
       let cardsPicked = [];
       let picks;
 
-      const btn = document.querySelector('button');
+      const btn = document.querySelector('button.connect_btn');
 
       btn.addEventListener('click', setGame);
 
       function setGame(e){
         var type = $(".mdc-text-field__input").val();
         socket.emit('add user', type);
-        
         socket.on('players', function (data) {
-          $(".selector").text("Selector: "+data.selector);
+          $(".selector").text("Selector: " + data.selector);
           getData();
           displayUsers(data.players);
         });
@@ -114,6 +120,9 @@
 
       // gets card information from the server
       function getData(){
+        if(selector == false){
+          $(".choose_btn").attr("disabled")
+        }
         $.ajax({
           url : '/users',
           method : 'GET',
@@ -161,9 +170,11 @@
 
         $("body").on("click", ".group", function(){
           if(selector == true){
-            socket.emit("round winner", $(this).find("p.player").text())
+            $(this).find(".ans").css('background-color', "#6B8EB7")
+            // socket.emit("round winner", $(this).find("p.player").text())
           }
         });
+        $(".choose_btn").on("")
       });
     </script>
   </body>

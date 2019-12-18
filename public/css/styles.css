@@ -12,7 +12,7 @@ body{
     width: 20%;
     display: block;
     margin-left: 10px;
-    margin-right: 100px;
+    margin-right: 50px;
 }
 
 .answers{
@@ -36,8 +36,6 @@ body{
     box-shadow: 10px 5px 5px lightgray;
     height: 200px;
     width: 200px;
-    margin-left: 20px;
-    margin-right: 50px;
 }
 
 .player{
@@ -60,12 +58,24 @@ body{
     flex-direction: row;
 }
 
+.select{
+    width: 100%;
+    text-align: center;
+}
+
 .cards{
     width: 100%;
-    height: 30vh;
     display: flex;
     justify-content: center;
     align-items: center;
+    flex-wrap: wrap;
+}
+
+.separator {
+    border: 1px dashed #000;
+    width: 100%;
+    margin-top: 10px;
+    margin-bottom:10px;
 }
 
 .bottom{
@@ -90,9 +100,18 @@ body{
     align-items: center;
 }
 
+.choose_btn{
+    margin-top: 5px;
+    align-items: center;
+}
+
 #lobby_info{
+    margin-left: 10px;
+    margin-right:20px;
+    margin-top:20px;
     background-color: lightblue;
     width:250px;
+    height: 150px;
     display:flex;
     flex-direction: column;
 }
@@ -100,5 +119,10 @@ body{
 .user_display, .selector{
     padding:0;
     margin:5px;
+}
+.user_display{
     font-size: 14px;
+}
+.selector{
+    font-size: 20px;
 }
