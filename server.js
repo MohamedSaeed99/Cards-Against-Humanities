@@ -58,27 +58,28 @@ app.get('/users/:count',(request, response)=>{
 });
 
 var numUsers=0;
-var lobbies=[{
-    id : "",
-    users : [],
-    scores : []
-}]; 
+// var lobbies={
+//     id : "",
+//     users : [],
+//     scores : []
+// }; 
+var lobbies = {};
 
 io.on('connection', function (socket) {
     // allows users to connect once
     var addedUser = false;
 
-    function newRoundUsers(prevSelector){
+    function newRoundUsers(prevSelector, gameId){
         var usernames = [];
         var selector;
         // gets names of users
-        for(var i = 0; i < lobbies[0]['users'].length; i++){
-            usernames.push(lobbies[0]['users'][i].username)
+        for(var i = 0; i < lobbies[gameId].users.length; i++){
+            usernames.push(lobbies[gameId].users[i].username)
         }
 
         // randomly selects a user to be the selector
         if(prevSelector == undefined){
-            selector = lobbies[0]['users'][Math.floor(Math.random() * lobbies[0]['users'].length)];
+            selector = lobbies[gameId].users[Math.floor(Math.random() * lobbies[gameId].users.length)];
         }
         else{
             var ind = usernames.indexOf(prevSelector);
@@ -88,42 +89,74 @@ io.on('connection', function (socket) {
             else{
                 ind++;
             }
-            selector = lobbies[0]['users'][ind];
+            selector = lobbies[gameId].users[ind];
         }
         selector.emit("selector", {
             "players" : usernames,
-            "scores" : lobbies[0]['scores']
+            "scores" : lobbies[gameId].scores
         });
 
         // notifies the other clients that they are players
-        for(var i = 0; i < lobbies[0]['users'].length; i++){
-            if(lobbies[0]['users'][i] == selector){
+        for(var i = 0; i < lobbies[gameId].users.length; i++){
+            if(lobbies[gameId].users[i] == selector){
                 continue;
             }
             else{
-                lobbies[0]['users'][i].emit("players", {
+                lobbies[gameId].users[i].emit("players", {
                         'selector' : selector.username,
                         'players' : usernames,
-                        'scores' : lobbies[0]['scores']
+                        'scores' : lobbies[gameId].scores
                     }
                 );
             }
         }
     }
 
+    socket.on("create game", function(username){
+        var gameId = (Math.random()+1).toString(36).slice(2, 18);
+        lobbies[gameId] = {
+            'host' : "",
+            'users' : [],
+            'scores' : []
+        };
+
+        socket.username = username;
+        lobbies[gameId].host = socket.username;
+        lobbies[gameId].users.push(socket);
+        lobbies[gameId].scores.push(0);
+
+        io.emit('game created', {
+            'username' : socket.username,
+            'gameid' : gameId
+        })
+    });
+
+    socket.on("list_games", function(){
+        var games = [];
+        var hosts = [];
+        for (var key in lobbies) {
+            games.push(key);
+            hosts.push(lobbies[key].host);
+        }
+        socket.emit('list', {
+            'games' : games,
+            "hosts" : hosts
+        });
+    });
+
     socket.on('round winner', function(winner){
-        for(var i = 0; i < lobbies[0]['users'].length; i++){
-            if(winner == lobbies[0]['users'][i].username){
-                lobbies[0]['scores'][i] += 100;
+        for(var i = 0; i < lobbies[winner.gameId]['users'].length; i++){
+            if(winner.winner == lobbies[winner.gameId]['users'][i].username){
+                lobbies[winner.gameId]['scores'][i] += 100;
             }
         }
         io.emit('round over', {
-            'winner' : winner,
-            'scores' : lobbies[0]['scores']
+            'winner' : winner.winner,
+            'scores' : lobbies[winner.gameId]['scores']
         });
         setTimeout(function(){ 
             newCard();
-            newRoundUsers(socket.username); 
+            newRoundUsers(socket.username, winner.gameId); 
         }, 2000);
     });
 
@@ -138,35 +171,35 @@ io.on('connection', function (socket) {
 
 
     // adds user to the lobby by listening for emissions from client
-    socket.on('add user', function (username) {
+    socket.on('add user', function (data) {
         // checks if user was added
         if (addedUser) {
             console.log(socket.username + " is already in lobby.");
             return;
         }
         // checks if lobby is full
-        if(numUsers == 4){
+        if(lobbies[data.gameId].users.length == 3){
             console.log("Lobby is full.")
             return;
         }
         
         // store the username in the socket session for this client
-        socket.username = username;
-        numUsers++;
+        socket.username = data.username;
         addedUser = true;
 
+
+
         // adds user to the lobby
-        lobbies[0]["users"].push(socket)
-        lobbies[0]["scores"].push(0)
-        lobbies[0]["id"] = 0
+        lobbies[data.gameId]["users"].push(socket)
+        lobbies[data.gameId]["scores"].push(0)
 
         // randomly chooses an initial selector from the players
-        if (numUsers == 4){
+        if (lobbies[data.gameId].users.length == 3){
             // gets random question card
             newCard();
 
             // selects the players and selector
-            newRoundUsers();
+            newRoundUsers(undefined, data.gameId);
         }
     });
 });

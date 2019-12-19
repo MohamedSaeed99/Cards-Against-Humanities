@@ -35,21 +35,29 @@
       </div>
     </div>
 
+    <div class='lobbies'>
+      <ul class="mdc-list">
+      </ul>
+    </div>
     <div class="connect">
-        <div class="mdc-text-field text-field mdc-text-field--outlined text" data-mdc-auto-init="MDCTextField">
-          <input type="text" id="text-field-outlined" class="mdc-text-field__input" aria-describedby="text-field-outlined-helper-text">
-          <div class="mdc-notched-outline mdc-notched-outline--upgraded">
-              <div class="mdc-notched-outline__leading"></div>
-              <div class="mdc-notched-outline__notch">
-                  <label class="mdc-floating-label" for="text-field-outlined">Username</label>
-              </div>
-              <div class="mdc-notched-outline__trailing"></div>
-          </div>
+      <div class="mdc-text-field text-field mdc-text-field--outlined text" data-mdc-auto-init="MDCTextField">
+        <input type="text" id="text-field-outlined" class="mdc-text-field__input" aria-describedby="text-field-outlined-helper-text">
+        <div class="mdc-notched-outline mdc-notched-outline--upgraded">
+            <div class="mdc-notched-outline__leading"></div>
+            <div class="mdc-notched-outline__notch">
+                <label class="mdc-floating-label" for="text-field-outlined">Username</label>
+            </div>
+            <div class="mdc-notched-outline__trailing"></div>
         </div>
-        <button class="mdc-button mdc-button--outlined mdc-button--raised connect_btn">
-            <div class="mdc-button__ripple"></div>
-            <span class="mdc-button__label">Connect</span>
-        </button>
+      </div>
+      <button class="mdc-button mdc-button--outlined mdc-button--raised connect_btn" disabled>
+          <div class="mdc-button__ripple"></div>
+          <span class="mdc-button__label">Connect</span>
+      </button>
+      <button class="mdc-button mdc-button--outlined mdc-button--raised create_btn">
+        <div class="mdc-button__ripple"></div>
+        <span class="mdc-button__label">New Game</span>
+      </button>
     </div>
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
@@ -63,9 +71,10 @@
 
     <script type="text/javascript">
       let sent = false;
-      var socket = io();
+      let socket = io();
       let selector = false;
       let cardsPicked = [];
+      let gameId;
       let picks;
       let winner;
 
@@ -75,7 +84,10 @@
 
       function setGame(e){
         var type = $(".mdc-text-field__input").val();
-        socket.emit('add user', type);
+        socket.emit('add user', {
+          'username' : type,
+          'gameId' : gameId
+        });
       }
 
       socket.on('players', function (data) {
@@ -114,6 +126,15 @@
 
         console.log("game over")
       });
+
+      socket.on('game created', function(data){
+        var list =`<li class="mdc-list-item">
+                    <span class="mdc-list-item__text">${data.username}</span>
+                    <p class='gameId'>${data.gameid}</p>
+                  </li>`
+        $(".mdc-list").append(list);
+        console.log(data.username)
+      })
 
       // creates the cards of the answers selected by users
       socket.on("selected answers", function(data){
@@ -183,6 +204,18 @@
 
       // sets event handlers on the cards
       $(document).ready(function(){
+        socket.emit("list_games");
+        socket.on('list', function(data){
+          console.log(data)
+          for(var i = 0; i < data.games.length; i++){
+            var list =`<li class="mdc-list-item">
+                    <span class="mdc-list-item__text">${data.hosts[i]}</span>
+                    <p class='gameId'>${data.games[i]}</p>
+                  </li>`
+            $(".mdc-list").append(list);
+          }
+        });
+
         $("body").on("click", ".mdc-card.white", function(){
           if(picks > 0 && selector == false){
             console.log('selected ' + picks.toString());
@@ -198,6 +231,15 @@
           }
         });
 
+        $("body").on("click", ".mdc-list-item", function(){
+          $('.mdc-list-item.selected').removeClass('selected');
+            $(this).addClass('selected');
+            $(".connect_btn").removeAttr("disabled");
+            gameId = $(this).find(".gameId").text()
+        });
+
+
+        // TODO: disable connect button unless a lobby is selected
         $("body").on("click", ".group", function(){
           if(selector == true){
             $('.ans.selected').removeClass('selected').addClass('unselected');
@@ -207,7 +249,14 @@
           }
         });
         $(".choose_btn").on("click", function(){
-          socket.emit("round winner", winner);
+          socket.emit("round winner", {
+            "winner" : winner,
+            "gameId" : gameId
+          });
+        });
+        $(".create_btn").on("click", function(){
+          var type = $(".mdc-text-field__input").val();
+          socket.emit('create game', type);
         });
       });
     </script>

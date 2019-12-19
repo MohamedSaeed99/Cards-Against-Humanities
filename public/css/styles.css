@@ -38,8 +38,15 @@ body{
     width: 200px;
 }
 
-.player{
+.player, .gameId{
     display:none;
+}
+
+.mdc-list-item{
+    margin: 0;
+    padding: 0;
+    width: 99.2%;
+    padding-left:10px;
 }
 
 .white, .ans{
@@ -107,7 +114,7 @@ body{
     align-items: center;
 }
 
-.choose_btn{
+.choose_btn, .create_btn{
     margin-top: 5px;
     align-items: center;
 }
