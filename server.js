@@ -114,24 +114,29 @@ io.on('connection', function (socket) {
 
     socket.on("create game", function(username){
         var gameId = (Math.random()+1).toString(36).slice(2, 18);
+
         lobbies[gameId] = {
-            'host' : "",
+            'host' : username,
             'users' : [],
             'scores' : []
         };
 
+        // store the username in the socket session for this client
         socket.username = username;
-        lobbies[gameId].host = socket.username;
-        lobbies[gameId].users.push(socket);
-        lobbies[gameId].scores.push(0);
+        addedUser = true;
+
+        // adds user to the lobby
+        lobbies[gameId]["users"].push(socket)
+        lobbies[gameId]["scores"].push(0)
 
         io.emit('game created', {
             'username' : socket.username,
             'gameid' : gameId
-        })
+        });
+        socket.emit("host", gameId);
     });
 
-    socket.on("list_games", function(){
+    socket.on("list games", function(){
         var games = [];
         var hosts = [];
         for (var key in lobbies) {
@@ -160,7 +165,7 @@ io.on('connection', function (socket) {
         }, 2000);
     });
 
-    // listen fo player answers
+    // listen of player answers
     socket.on('answer', function(card){
         io.emit("selected answers", {
                                 'cards' : card,
@@ -186,8 +191,6 @@ io.on('connection', function (socket) {
         // store the username in the socket session for this client
         socket.username = data.username;
         addedUser = true;
-
-
 
         // adds user to the lobby
         lobbies[data.gameId]["users"].push(socket)

@@ -88,19 +88,21 @@
           'username' : type,
           'gameId' : gameId
         });
+        $(".connect").hide();
       }
 
       socket.on('players', function (data) {
         $(".selector").text("Selector: " + data.selector);
         selector = false;
+        $(".choose_btn").attr("disabled", true);
         getData();
         displayUsers(data.players, data.scores);
       });
 
       socket.on('selector', function (data) {
         $(".selector").text("Selector: YOU");
-        console.log(data);
         selector = true;
+        $(".choose_btn").removeAttr("disabled");
         getData();
         displayUsers(data.players, data.scores);
       });
@@ -123,8 +125,6 @@
           cardsPicked = [];
           sent = false;
         }, 2000);
-
-        console.log("game over")
       });
 
       socket.on('game created', function(data){
@@ -133,7 +133,6 @@
                     <p class='gameId'>${data.gameid}</p>
                   </li>`
         $(".mdc-list").append(list);
-        console.log(data.username)
       })
 
       // creates the cards of the answers selected by users
@@ -167,9 +166,6 @@
 
       // gets card information from the server
       function getData(){
-        if(selector == false){
-          $(".choose_btn").attr("disabled")
-        }
         var url = '/users/'+(6-$(".white").length).toString()
         $.ajax({
           url : url,
@@ -178,7 +174,8 @@
             fillCards(data.white);
             setBlackCard(data.black);
             $(".game").css("display", "block");
-            $(".connect").hide()
+            $(".connect").hide();
+            $(".lobbies").hide();
           },
           error: function(err){
             console.log('Failed');
@@ -202,11 +199,14 @@
         }
       }
 
+      socket.on("host", function(id){
+        gameId = id
+      });
+
       // sets event handlers on the cards
       $(document).ready(function(){
-        socket.emit("list_games");
+        socket.emit("list games");
         socket.on('list', function(data){
-          console.log(data)
           for(var i = 0; i < data.games.length; i++){
             var list =`<li class="mdc-list-item">
                     <span class="mdc-list-item__text">${data.hosts[i]}</span>
@@ -257,6 +257,7 @@
         $(".create_btn").on("click", function(){
           var type = $(".mdc-text-field__input").val();
           socket.emit('create game', type);
+          $(".connect").hide();
         });
       });
     </script>
