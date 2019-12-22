@@ -67,7 +67,7 @@ var lobbies = {};
 
 io.on('connection', function (socket) {
     // allows users to connect once
-    var addedUser = false;
+    socket.addedUser = false;
 
     function newRoundUsers(prevSelector, gameId){
         var usernames = [];
@@ -123,7 +123,7 @@ io.on('connection', function (socket) {
 
         // store the username in the socket session for this client
         socket.username = username;
-        addedUser = true;
+        socket.addedUser = true;
 
         // adds user to the lobby
         lobbies[gameId]["users"].push(socket)
@@ -134,6 +134,28 @@ io.on('connection', function (socket) {
             'gameid' : gameId
         });
         socket.emit("host", gameId);
+    });
+
+    socket.on("leave", function(gameId){
+        for(var i = 0; i < lobbies[gameId].users.length; i++){
+            if(lobbies[gameId].users[i] == socket){
+                if(socket.username == lobbies[gameId].host){
+                    for(var i = 0; i < lobbies[gameId].users.length; i++){
+                        lobbies[gameId].users[i].addedUser = false;
+                    }
+                    delete lobbies[gameId];
+                    io.emit("kick everyone", gameId);
+                }
+                else{
+                    lobbies[gameId].users[i].addedUser = false;
+                    lobbies[gameId].users.splice(i,i);
+                    lobbies[gameId].scores.splice(i,i);
+                    io.emit("left", socket.username);
+                    console.log(socket.username + " is leaving");
+                }
+                break;
+            }
+        }
     });
 
     socket.on("list games", function(){
@@ -178,26 +200,26 @@ io.on('connection', function (socket) {
     // adds user to the lobby by listening for emissions from client
     socket.on('add user', function (data) {
         // checks if user was added
-        if (addedUser) {
+        if (socket.addedUser) {
             console.log(socket.username + " is already in lobby.");
             return;
         }
         // checks if lobby is full
-        if(lobbies[data.gameId].users.length == 3){
+        if(lobbies[data.gameId].users.length == 2){
             console.log("Lobby is full.")
             return;
         }
         
         // store the username in the socket session for this client
         socket.username = data.username;
-        addedUser = true;
+        socket.addedUser = true;
 
         // adds user to the lobby
         lobbies[data.gameId]["users"].push(socket)
         lobbies[data.gameId]["scores"].push(0)
 
         // randomly chooses an initial selector from the players
-        if (lobbies[data.gameId].users.length == 3){
+        if (lobbies[data.gameId].users.length == 2){
             // gets random question card
             newCard();
 

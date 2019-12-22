@@ -11,15 +11,19 @@
     <div class="game">
       <div class = 'select'>
         <p class='selector'></p>
+        <button class="mdc-button mdc-button--outlined mdc-button--raised leave_btn">
+          <div class="mdc-button__ripple"></div>
+          <span class="mdc-button__label">Leave</span>
+        </button>
       </div>
       <div class="top">
         <div class="blackcard">
           <div class="mdc-card black">
             <p class="content"></p>
           </div>
-          <button class="hero-button mdc-button mdc-button--outlined mdc-ripple-upgraded choose_btn">
-            <span class="mdc-button__ripple"></span>
-            Choose
+          <button class="mdc-button mdc-button--outlined mdc-button--raised choose_btn">
+            <div class="mdc-button__ripple"></div>
+            <span class="mdc-button__label">Choose</span>
           </button>
         </div>
         <div class="answers">
@@ -203,6 +207,24 @@
         gameId = id
       });
 
+      socket.on("kick everyone", function(){
+        $(".white").remove();
+        $(".user_info").remove();
+        $(".game").hide();
+        $(".lobbies").show();
+        $(".connect").show();
+        $(".connect_btn").attr("disabled", true);
+        $("li.mdc-list-item").each(function(){
+          if($(this).find(".gameId").text() == gameId){
+            console.log(gameId);
+            $(this).remove();
+          }
+        });
+      });
+      socket.on("left", function(){
+
+      });
+
       // sets event handlers on the cards
       $(document).ready(function(){
         socket.emit("list games");
@@ -229,6 +251,16 @@
             socket.emit('answer', cardsPicked);
             sent = true;
           }
+        });
+
+        $(".leave_btn").on("click", function(){
+          socket.emit("leave", gameId);
+          $(".white").remove();
+          $(".user_info").remove();
+          $(".game").hide();
+          $(".lobbies").show();
+          $(".connect").show();
+          $(".connect_btn").attr("disabled", true);
         });
 
         $("body").on("click", ".mdc-list-item", function(){
