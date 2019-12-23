@@ -138,26 +138,28 @@ io.on('connection', function (socket) {
     });
 
     socket.on("leave", function(gameId){
-        for(var i = 0; i < lobbies[gameId].users.length; i++){
-            if(lobbies[gameId].users[i] == socket){
-                if(socket.username == lobbies[gameId].host){
-                    for(var j = 0; j < lobbies[gameId].users.length; j++){
-                        lobbies[gameId].users[j].addedUser = false;
+        if(gameId != undefined){
+            for(var i = 0; i < lobbies[gameId].users.length; i++){
+                if(lobbies[gameId].users[i] == socket){
+                    if(socket.username == lobbies[gameId].host){
+                        for(var j = 0; j < lobbies[gameId].users.length; j++){
+                            lobbies[gameId].users[j].addedUser = false;
+                        }
+                        delete lobbies[gameId];
+                        io.emit("kick everyone", gameId);
                     }
-                    delete lobbies[gameId];
-                    io.emit("kick everyone", gameId);
-                }
-                else{
-                    lobbies[gameId].users[i].addedUser = false;
-                    lobbies[gameId].users.splice(i,i);
-                    lobbies[gameId].scores.splice(i,i);
-                    for(var j = 0; j < lobbies[gameId].users.length; j++){
-                        lobbies[gameId].users[j].emit("lobby user left", socket.username);
+                    else{
+                        lobbies[gameId].users[i].addedUser = false;
+                        lobbies[gameId].users.splice(i,i);
+                        lobbies[gameId].scores.splice(i,i);
+                        for(var j = 0; j < lobbies[gameId].users.length; j++){
+                            lobbies[gameId].users[j].emit("lobby user left", socket.username);
+                        }
+                        io.emit("left", gameId);
+                        console.log(socket.username + " is leaving");
                     }
-                    io.emit("left", gameId);
-                    console.log(socket.username + " is leaving");
+                    break;
                 }
-                break;
             }
         }
     });

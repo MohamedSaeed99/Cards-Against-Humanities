@@ -254,6 +254,10 @@
           }
         });
       });
+      window.onbeforeunload = function(event){
+        socket.emit("leave", gameId);
+        return undefined;
+      };
 
       // sets event handlers on the cards
       $(document).ready(function(){
