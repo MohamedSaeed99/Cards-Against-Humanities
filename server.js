@@ -131,7 +131,8 @@ io.on('connection', function (socket) {
 
         io.emit('game created', {
             'username' : socket.username,
-            'gameid' : gameId
+            'gameid' : gameId,
+            'tot' : lobbies[gameId]["users"].length
         });
         socket.emit("host", gameId);
     });
@@ -140,8 +141,8 @@ io.on('connection', function (socket) {
         for(var i = 0; i < lobbies[gameId].users.length; i++){
             if(lobbies[gameId].users[i] == socket){
                 if(socket.username == lobbies[gameId].host){
-                    for(var i = 0; i < lobbies[gameId].users.length; i++){
-                        lobbies[gameId].users[i].addedUser = false;
+                    for(var j = 0; j < lobbies[gameId].users.length; j++){
+                        lobbies[gameId].users[j].addedUser = false;
                     }
                     delete lobbies[gameId];
                     io.emit("kick everyone", gameId);
@@ -150,7 +151,10 @@ io.on('connection', function (socket) {
                     lobbies[gameId].users[i].addedUser = false;
                     lobbies[gameId].users.splice(i,i);
                     lobbies[gameId].scores.splice(i,i);
-                    io.emit("left", socket.username);
+                    for(var j = 0; j < lobbies[gameId].users.length; j++){
+                        lobbies[gameId].users[j].emit("lobby user left", socket.username);
+                    }
+                    io.emit("left", gameId);
                     console.log(socket.username + " is leaving");
                 }
                 break;
@@ -161,13 +165,16 @@ io.on('connection', function (socket) {
     socket.on("list games", function(){
         var games = [];
         var hosts = [];
+        var numUsers = [];
         for (var key in lobbies) {
             games.push(key);
             hosts.push(lobbies[key].host);
+            numUsers.push(lobbies[key].users.length)
         }
         socket.emit('list', {
             'games' : games,
-            "hosts" : hosts
+            "hosts" : hosts,
+            "tot" : numUsers
         });
     });
 
@@ -217,6 +224,11 @@ io.on('connection', function (socket) {
         // adds user to the lobby
         lobbies[data.gameId]["users"].push(socket)
         lobbies[data.gameId]["scores"].push(0)
+
+        io.emit("user added", {
+            "game" : data.gameId,
+            "tot" : lobbies[data.gameId]["users"].length
+        });
 
         // randomly chooses an initial selector from the players
         if (lobbies[data.gameId].users.length == 2){

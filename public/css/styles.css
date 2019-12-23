@@ -45,8 +45,12 @@ body{
 .mdc-list-item{
     margin: 0;
     padding: 0;
-    width: 99.2%;
+    width: 98.4%;
     padding-left:10px;
+    padding-right: 10px;
+    display:flex;
+    flex-direction: row;
+    justify-content: space-between;
 }
 
 .white, .ans{

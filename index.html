@@ -134,6 +134,7 @@
       socket.on('game created', function(data){
         var list =`<li class="mdc-list-item">
                     <span class="mdc-list-item__text">${data.username}</span>
+                    <span class="mdc-list-item__text count">${data.tot}</span>
                     <p class='gameId'>${data.gameid}</p>
                   </li>`
         $(".mdc-list").append(list);
@@ -221,8 +222,37 @@
           }
         });
       });
-      socket.on("left", function(){
 
+      // notifies the current lobby that a user has left
+      socket.on("lobby user left", function(user){
+        var found;
+        $(".user_info").each(function(){
+          if($(this).find(".name").text() == user+":"){
+            $(this).find(".score").text("Left");
+            found = this;
+          }
+        });
+        setTimeout(function(){ 
+          $(found).remove();
+        }, 1000);
+      });
+
+      // updates the number of users in the lobby when someone leaves
+      socket.on("left", function(game){
+        $(".mdc-list-item").each(function(){
+          if($(this).find(".gameId").text() == game){
+            $(this).find(".count").text($(this).find(".count").text() - 1)
+          }
+        });
+      });
+
+      // updates the number of users in the lobby when someone joins
+      socket.on("user added", function(data){
+        $(".mdc-list-item").each(function(){
+          if($(this).find(".gameId").text() == data.game){
+            $(this).find(".count").text(data.tot)
+          }
+        });
       });
 
       // sets event handlers on the cards
@@ -232,6 +262,7 @@
           for(var i = 0; i < data.games.length; i++){
             var list =`<li class="mdc-list-item">
                     <span class="mdc-list-item__text">${data.hosts[i]}</span>
+                    <span class="mdc-list-item__text count">${data.tot[i]}</span>
                     <p class='gameId'>${data.games[i]}</p>
                   </li>`
             $(".mdc-list").append(list);
