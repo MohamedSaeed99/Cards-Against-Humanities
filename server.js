@@ -57,12 +57,6 @@ app.get('/users/:count',(request, response)=>{
     response.json(collection);
 });
 
-var numUsers=0;
-// var lobbies={
-//     id : "",
-//     users : [],
-//     scores : []
-// }; 
 var lobbies = {};
 
 io.on('connection', function (socket) {
@@ -138,15 +132,16 @@ io.on('connection', function (socket) {
     });
 
     socket.on("leave", function(gameId){
-        if(gameId != undefined){
+        try{
             for(var i = 0; i < lobbies[gameId].users.length; i++){
                 if(lobbies[gameId].users[i] == socket){
                     if(socket.username == lobbies[gameId].host){
                         for(var j = 0; j < lobbies[gameId].users.length; j++){
                             lobbies[gameId].users[j].addedUser = false;
+                            lobbies[gameId].users[j].emit("kick everyone", gameId);
                         }
                         delete lobbies[gameId];
-                        io.emit("kick everyone", gameId);
+                        io.emit("remove lobby", gameId);
                     }
                     else{
                         lobbies[gameId].users[i].addedUser = false;
@@ -161,7 +156,10 @@ io.on('connection', function (socket) {
                     break;
                 }
             }
+        }catch(e){
+            console.log(e.message);
         }
+    
     });
 
     socket.on("list games", function(){
@@ -214,10 +212,10 @@ io.on('connection', function (socket) {
             return;
         }
         // checks if lobby is full
-        if(lobbies[data.gameId].users.length == 2){
-            console.log("Lobby is full.")
-            return;
-        }
+        // if(lobbies[data.gameId].users.length >= 2){
+        //     console.log("Lobby is full.")
+        //     return;
+        // }
         
         // store the username in the socket session for this client
         socket.username = data.username;
@@ -233,7 +231,7 @@ io.on('connection', function (socket) {
         });
 
         // randomly chooses an initial selector from the players
-        if (lobbies[data.gameId].users.length == 2){
+        if (lobbies[data.gameId].users.length >= 2){
             // gets random question card
             newCard();
 

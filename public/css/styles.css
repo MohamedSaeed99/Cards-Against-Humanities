@@ -9,10 +9,9 @@ body{
 }
 
 .blackcard{
-    width: 20%;
     display: block;
     margin-left: 10px;
-    margin-right: 50px;
+    margin-right: 10px;
 }
 
 .answers{
@@ -122,14 +121,16 @@ body{
     margin-top: 5px;
     align-items: center;
 }
+.choose_btn{
+    width: 150px;
+    margin-left:23px;
+}
 
 #lobby_info{
     margin-left: 10px;
     margin-right:20px;
     margin-top:20px;
-    background-color: lightblue;
     width:250px;
-    height: 150px;
     display:flex;
     flex-direction: column;
 }

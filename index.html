@@ -215,6 +215,11 @@
         $(".lobbies").show();
         $(".connect").show();
         $(".connect_btn").attr("disabled", true);
+        gameId = undefined;
+      });
+
+      // removes the lobby from the selection list
+      socket.on("remove lobby", function(gameId){
         $("li.mdc-list-item").each(function(){
           if($(this).find(".gameId").text() == gameId){
             console.log(gameId);
@@ -256,6 +261,7 @@
       });
       window.onbeforeunload = function(event){
         socket.emit("leave", gameId);
+        gameId = undefined;
         return undefined;
       };
 
