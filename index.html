@@ -103,6 +103,20 @@
         displayUsers(data.players, data.scores);
       });
 
+      socket.on('update player', function (data) {
+        $(".selector").text("Selector: " + data.selector);
+        selector = false;
+        $(".choose_btn").attr("disabled", true);
+        displayUsers(data.players, data.scores);
+      });
+
+      socket.on('update selecor', function (data) {
+        $(".selector").text("Selector: YOU");
+        selector = true;
+        $(".choose_btn").removeAttr("disabled");
+        displayUsers(data.players, data.scores);
+      });
+
       socket.on('selector', function (data) {
         $(".selector").text("Selector: YOU");
         selector = true;
@@ -311,8 +325,6 @@
             gameId = $(this).find(".gameId").text()
         });
 
-
-        // TODO: disable connect button unless a lobby is selected
         $("body").on("click", ".group", function(){
           if(selector == true){
             $('.ans.selected').removeClass('selected').addClass('unselected');
@@ -321,12 +333,14 @@
             winner = $(this).find(".player").first().text();
           }
         });
+
         $(".choose_btn").on("click", function(){
           socket.emit("round winner", {
             "winner" : winner,
             "gameId" : gameId
           });
         });
+
         $(".create_btn").on("click", function(){
           var type = $(".mdc-text-field__input").val();
           socket.emit('create game', type);
