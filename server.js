@@ -1,4 +1,6 @@
 // Resources Used : https://codeburst.io/the-only-nodejs-introduction-youll-ever-need-d969a47ef219
+// Link to hosting own server : http://pagekite.net/downloads
+
 let blackcards = [];
 let whitecards;
 let blackcard;
@@ -27,7 +29,7 @@ var app = express();
 var http = require('http');
 
 //setting the port.
-app.set('port', process.env.PORT || 3000);
+app.set('port', process.env.PORT || 80);
 
 var server = http.createServer(app).listen(app.get('port'), function(){
     console.log("Express server listening on port " + app.get('port'));
