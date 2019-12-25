@@ -167,23 +167,23 @@ io.on('connection', function (socket) {
                         io.emit("remove lobby", gameId);
                     }
                     else{
-
                         lobbies[gameId].users[i].addedUser = false;
 
                         // if the selector left then it selects the next one
-                        // if(socket.username == lobbies[gameId].selector.username){
-                        //     getNewSelector(gameId);
-                        //     newRoundUsers(gameId, true);
-                        // }
+                        if(socket.username == lobbies[gameId].selector.username){
+                            getNewSelector(gameId);
+                        }
 
                         // removes the score and player from lobby
-                        lobbies[gameId].users.splice(i,i);
-                        lobbies[gameId].scores.splice(i,i);
+                        lobbies[gameId].users.splice(i, 1);
+                        lobbies[gameId].scores.splice(i, 1);
 
                         // notifies player in that lobby that a player has left
                         for(var j = 0; j < lobbies[gameId].users.length; j++){
                             lobbies[gameId].users[j].emit("lobby user left", socket.username);
                         }
+
+                        newRoundUsers(gameId, true);
 
                         // lets all other players know that the lobby has a spot open
                         io.emit("left", gameId);
@@ -214,21 +214,66 @@ io.on('connection', function (socket) {
         });
     });
 
+    function displayWinner(gameId, username){
+        for(var j = 0; j < lobbies[gameId]['users'].length; j++){
+            lobbies[gameId]['users'][j].emit("found winner", username);
+        }
+    }
+
+    // checks if user won and ends game
+    socket.on("check game winner", function(gameId){
+        for(var i = 0; i < lobbies[gameId]['scores'].length; i++){
+            if(lobbies[gameId]['scores'][i] == 100){
+                displayWinner(gameId, lobbies[gameId]['scores'][i].username)
+
+                for(var j = 0; j < lobbies[gameId]['users'].length; j++){
+
+                    lobbies[gameId]['users'][j].emit("kick everyone", gameId)
+                }
+
+                break;
+            }
+        }
+    });
+
     socket.on('round winner', function(winner){
+        var winnerFound = false;
+        var user;
         for(var i = 0; i < lobbies[winner.gameId]['users'].length; i++){
             if(winner.winner == lobbies[winner.gameId]['users'][i].username){
                 lobbies[winner.gameId]['scores'][i] += 100;
+                if(lobbies[winner.gameId]['scores'][i] == 100){
+                    winnerFound = true;
+                    user = lobbies[winner.gameId]['users'][i]
+                }
             }
         }
+
         io.emit('round over', {
             'winner' : winner.winner,
             'scores' : lobbies[winner.gameId]['scores']
         });
-        setTimeout(function(){ 
-            newCard();
-            getNewSelector(winner.gameId); 
-            newRoundUsers(winner.gameId)
-        }, 2000);
+
+        if(winnerFound == false){
+            setTimeout(function(){ 
+                newCard();
+                getNewSelector(winner.gameId); 
+                newRoundUsers(winner.gameId)
+            }, 2000);
+        }
+        else {
+            for(var i = 0; i < lobbies[winner.gameId]['users'].length; i++){
+                lobbies[winner.gameId]['users'][i].emit("game winner", user.username)
+            }
+            setTimeout(function(){
+                for(var j = 0; j < lobbies[winner.gameId]['users'].length; j++){
+                    lobbies[winner.gameId].users[j].addedUser = false;
+                    lobbies[winner.gameId]['users'][j].emit("kick everyone")
+                }
+                delete lobbies[winner.gameId];
+                io.emit("remove lobby", winner.gameId);
+            }, 5000);
+        }
     });
 
     // listen of player answers
@@ -249,7 +294,7 @@ io.on('connection', function (socket) {
             return;
         }
         // checks if lobby is full
-        if(lobbies[data.gameId].users.length == 4){
+        if(lobbies[data.gameId].users.length == 2){
             console.log("Lobby is full.")
             return;
         }
@@ -257,8 +302,6 @@ io.on('connection', function (socket) {
         // store the username in the socket session for this client
         socket.username = data.username;
         socket.addedUser = true;
-
-        console.log("addnig to obby", socket.username)
 
         // adds user to the lobby
         lobbies[data.gameId].users.push(socket)
@@ -268,10 +311,9 @@ io.on('connection', function (socket) {
             "game" : data.gameId,
             "tot" : lobbies[data.gameId]["users"].length
         });
-        console.log(lobbies[data.gameId].scores)
 
         // randomly chooses an initial selector from the players
-        if (lobbies[data.gameId].users.length == 4){
+        if (lobbies[data.gameId].users.length == 2){
             // gets random question card
             newCard();
 

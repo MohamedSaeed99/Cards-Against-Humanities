@@ -28,6 +28,10 @@
         </div>
         <div class="answers">
         </div>
+
+        <div class='disp_winner'> 
+          <p class="winner">BOB IS THE WINNER</p>
+        </div>
       </div>
       <div class='separator'></div>
       <div class="bottom">
@@ -99,6 +103,7 @@
         $(".selector").text("Selector: " + data.selector);
         selector = false;
         $(".choose_btn").attr("disabled", true);
+        $(".disp_winner").hide();
         getData();
         displayUsers(data.players, data.scores);
       });
@@ -106,6 +111,7 @@
       socket.on('update player', function (data) {
         $(".selector").text("Selector: " + data.selector);
         selector = false;
+        $(".disp_winner").hide();
         $(".choose_btn").attr("disabled", true);
         displayUsers(data.players, data.scores);
       });
@@ -113,6 +119,7 @@
       socket.on('update selecor', function (data) {
         $(".selector").text("Selector: YOU");
         selector = true;
+        $(".disp_winner").hide();
         $(".choose_btn").removeAttr("disabled");
         displayUsers(data.players, data.scores);
       });
@@ -120,6 +127,7 @@
       socket.on('selector', function (data) {
         $(".selector").text("Selector: YOU");
         selector = true;
+        $(".disp_winner").hide();
         $(".choose_btn").removeAttr("disabled");
         getData();
         displayUsers(data.players, data.scores);
@@ -143,6 +151,11 @@
           cardsPicked = [];
           sent = false;
         }, 2000);
+      });
+
+      socket.on("game winner", function(user){
+        $(".disp_winner").show();
+        $(".winner").text(user + "IS THE WINNER");
       });
 
       socket.on('game created', function(data){
