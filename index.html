@@ -6,6 +6,7 @@
     <link href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" rel="stylesheet">
     <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
     <link rel="stylesheet" type="text/css" href="/css/styles.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   </head>
   <body>
     <div class="game">
@@ -58,6 +59,9 @@
             <div class="mdc-notched-outline__trailing"></div>
         </div>
       </div>
+      <div id="username-helper-text" class="mdc-text-field-helper-text mdc-text-field-helper-text--persistent" aria-hidden="true">
+      </div>
+
       <button class="mdc-button mdc-button--outlined mdc-button--raised connect_btn" disabled>
           <div class="mdc-button__ripple"></div>
           <span class="mdc-button__label">Connect</span>
@@ -92,12 +96,38 @@
 
       function setGame(e){
         var type = $(".mdc-text-field__input").val();
-        socket.emit('add user', {
-          'username' : type,
-          'gameId' : gameId
-        });
-        $(".connect").hide();
+        if($.trim(type) == '' || type =='undefined'){
+          $("#username-helper-text").empty();
+          $("#username-helper-text").append(`<i class="material-icons">
+                                              error_outline
+                                            </i>` + `Invalid User`
+                                            );
+        }
+        else{
+          socket.emit('username used', {
+            'username' : type,
+            'gameId' : gameId
+          });
+        }
       }
+
+      socket.on("user status", function(status){
+        if(status.status == true){
+          socket.emit('add user', {
+            'username' : status.user,
+            'gameId' : gameId
+          });
+          $(".connect").hide();
+          $("#username-helper-text").hide()
+        }
+        else{
+          $("#username-helper-text").empty();
+          $("#username-helper-text").append(`<i class="material-icons">
+                                              error_outline
+                                            </i>` + `Username Exists`
+                                            );
+        }
+      })
 
       socket.on('players', function (data) {
         $(".selector").text("Selector: " + data.selector);
@@ -155,7 +185,7 @@
 
       socket.on("game winner", function(user){
         $(".disp_winner").show();
-        $(".winner").text(user + "IS THE WINNER");
+        $(".winner").text(user + " IS THE WINNER");
       });
 
       socket.on('game created', function(data){

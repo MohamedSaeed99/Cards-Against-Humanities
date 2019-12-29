@@ -90,6 +90,7 @@ body{
 
 .winner{
     font-size: 20px;
+    color: white;
 }
 
 .disp_winner {
@@ -121,9 +122,9 @@ body{
     display: none;
 }
 
-.text {
+/* .text {
     margin:20px;
-}
+} */
 
 .connect {
     height: 100vh;
@@ -155,6 +156,17 @@ body{
 .user_info {
     display: flex;
     flex-direction: row;
+}
+
+#username-helper-text{
+    color: red;
+    margin-top:0;
+    padding-top:0;
+    margin-bottom:20px;
+}
+
+.material-icons{
+    float:left;
 }
 
 .name, .score, .selector{

@@ -112,6 +112,22 @@ io.on('connection', function (socket) {
         }
     }
 
+    socket.on("username used", function(data){
+        for(var i =0; i < lobbies[data.gameId].users.length; i++){
+            if(data.username == lobbies[data.gameId].users[i].username){
+                socket.emit("user status", {
+                    'status' : false,
+                    'user' : data.username
+                });
+                return;
+            }
+        }
+        socket.emit("user status", {
+            'status' : true,
+            'user' : data.username
+        });
+    })
+
     socket.on("create game", function(username){
         var gameId = (Math.random()+1).toString(36).slice(2, 18);
 
