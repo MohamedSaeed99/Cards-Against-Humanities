@@ -260,7 +260,7 @@ io.on('connection', function (socket) {
         for(var i = 0; i < lobbies[winner.gameId]['users'].length; i++){
             if(winner.winner == lobbies[winner.gameId]['users'][i].username){
                 lobbies[winner.gameId]['scores'][i] += 100;
-                if(lobbies[winner.gameId]['scores'][i] == 100){
+                if(lobbies[winner.gameId]['scores'][i] == 2000){
                     winnerFound = true;
                     user = lobbies[winner.gameId]['users'][i]
                 }
