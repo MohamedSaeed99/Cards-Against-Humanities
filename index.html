@@ -322,6 +322,12 @@
         return undefined;
       };
 
+      window.addEventListener('beforeunload', function () {
+        socket.emit("leave", gameId);
+        gameId = undefined;
+        return undefined;
+      });
+
       // sets event handlers on the cards
       $(document).ready(function(){
         socket.emit("list games");

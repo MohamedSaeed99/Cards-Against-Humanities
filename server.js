@@ -311,11 +311,11 @@ io.on('connection', function (socket) {
             console.log(socket.username + " is already in lobby.");
             return;
         }
-        // checks if lobby is full
-        if(lobbies[data.gameId].users.length == 2){
-            console.log("Lobby is full.")
-            return;
-        }
+        // // checks if lobby is full
+        // if(lobbies[data.gameId].users.length >= 2){
+        //     console.log("Lobby is full.")
+        //     return;
+        // }
         
         // store the username in the socket session for this client
         socket.username = data.username;
@@ -334,7 +334,8 @@ io.on('connection', function (socket) {
         if (lobbies[data.gameId].users.length == 2){
             // gets random question card
             newCard();
-
+        }
+        if(lobbies[data.gameId].users.length >= 2){
             // selects the players and selector
             newRoundUsers(data.gameId);
         }
